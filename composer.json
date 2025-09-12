@@ -19,7 +19,7 @@
       "ArrayPress\\WP\\ComposerAssets\\": "src/"
     },
     "files": [
-      "src/Utilities.php"
+      "src/Functions.php"
     ]
   },
   "config": {
