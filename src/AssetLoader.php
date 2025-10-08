@@ -506,6 +506,162 @@ class AssetLoader {
 	}
 
 	/**
+	 * Register a JavaScript file from a Composer library
+	 *
+	 * Registers (but doesn't enqueue) a script for later use.
+	 *
+	 * @param string      $handle    Script handle for registration
+	 * @param string      $file      Relative path to JS file from assets/
+	 * @param array       $deps      Optional. Script dependencies. Default ['jquery'].
+	 * @param string|bool $ver       Optional. Version string or false for auto-detection. Default false.
+	 * @param bool        $in_footer Optional. Whether to load in footer. Default true.
+	 *
+	 * @return bool True on success, false on failure
+	 */
+	public static function register_script(
+		string $handle,
+		string $file,
+		array $deps = [ 'jquery' ],
+		$ver = false,
+		bool $in_footer = true
+	): bool {
+		// Resolve asset paths
+		$asset = self::resolve_asset( $file );
+		if ( ! $asset ) {
+			return false;
+		}
+
+		// Determine version
+		$version = ( $ver === false ) ? self::get_version( $asset['file_path'] ) : $ver;
+
+		// Register the script
+		wp_register_script( $handle, $asset['file_url'], $deps, $version, $in_footer );
+
+		// Track for debugging
+		self::track_asset( $handle, 'script', $file );
+
+		return true;
+	}
+
+	/**
+	 * Register a CSS file from a Composer library
+	 *
+	 * Registers (but doesn't enqueue) a stylesheet for later use.
+	 *
+	 * @param string      $handle Style handle for registration
+	 * @param string      $file   Relative path to CSS file from assets/
+	 * @param array       $deps   Optional. Style dependencies. Default empty array.
+	 * @param string|bool $ver    Optional. Version string or false for auto-detection. Default false.
+	 * @param string      $media  Optional. Media type for which stylesheet applies. Default 'all'.
+	 *
+	 * @return bool True on success, false on failure
+	 */
+	public static function register_style(
+		string $handle,
+		string $file,
+		array $deps = [],
+		$ver = false,
+		string $media = 'all'
+	): bool {
+		// Resolve asset paths
+		$asset = self::resolve_asset( $file );
+		if ( ! $asset ) {
+			return false;
+		}
+
+		// Determine version
+		$version = ( $ver === false ) ? self::get_version( $asset['file_path'] ) : $ver;
+
+		// Register the style
+		wp_register_style( $handle, $asset['file_url'], $deps, $version, $media );
+
+		// Track for debugging
+		self::track_asset( $handle, 'style', $file );
+
+		return true;
+	}
+
+	/**
+	 * Register a JavaScript file with explicit file reference
+	 *
+	 * Alternative API that accepts a file path explicitly to avoid debug_backtrace overhead.
+	 *
+	 * @param string      $handle       Script handle for registration
+	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
+	 * @param string      $file         Relative path to JS file from assets/
+	 * @param array       $deps         Optional. Script dependencies. Default ['jquery'].
+	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
+	 * @param bool        $in_footer    Optional. Whether to load in footer. Default true.
+	 *
+	 * @return bool True on success, false on failure
+	 */
+	public static function register_script_from_file(
+		string $handle,
+		string $calling_file,
+		string $file,
+		array $deps = [ 'jquery' ],
+		$ver = false,
+		bool $in_footer = true
+	): bool {
+		// Resolve asset paths with an explicit file
+		$asset = self::resolve_asset_from_file( $calling_file, $file );
+		if ( ! $asset ) {
+			return false;
+		}
+
+		// Determine version
+		$version = ( $ver === false ) ? self::get_version( $asset['file_path'] ) : $ver;
+
+		// Register the script
+		wp_register_script( $handle, $asset['file_url'], $deps, $version, $in_footer );
+
+		// Track for debugging
+		self::track_asset( $handle, 'script', $file );
+
+		return true;
+	}
+
+	/**
+	 * Register a CSS file with an explicit file reference
+	 *
+	 * Alternative API that accepts a file path explicitly to avoid debug_backtrace overhead.
+	 *
+	 * @param string      $handle       Style handle for registration
+	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
+	 * @param string      $file         Relative path to CSS file from assets/
+	 * @param array       $deps         Optional. Style dependencies. Default empty array.
+	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
+	 * @param string      $media        Optional. Media type for which stylesheet applies. Default 'all'.
+	 *
+	 * @return bool True on success, false on failure
+	 */
+	public static function register_style_from_file(
+		string $handle,
+		string $calling_file,
+		string $file,
+		array $deps = [],
+		$ver = false,
+		string $media = 'all'
+	): bool {
+		// Resolve asset paths with an explicit file
+		$asset = self::resolve_asset_from_file( $calling_file, $file );
+		if ( ! $asset ) {
+			return false;
+		}
+
+		// Determine version
+		$version = ( $ver === false ) ? self::get_version( $asset['file_path'] ) : $ver;
+
+		// Register the style
+		wp_register_style( $handle, $asset['file_url'], $deps, $version, $media );
+
+		// Track for debugging
+		self::track_asset( $handle, 'style', $file );
+
+		return true;
+	}
+
+	/**
 	 * Get the URL for an asset file from a Composer library
 	 *
 	 * Returns the public URL for any asset file without registering or enqueueing it.
