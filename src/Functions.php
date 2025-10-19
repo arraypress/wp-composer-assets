@@ -7,7 +7,7 @@
  * @package     ArrayPress\WP\ComposerAssets
  * @copyright   Copyright (c) 2025, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
@@ -15,166 +15,27 @@ declare( strict_types=1 );
 
 use ArrayPress\WP\ComposerAssets\AssetLoader;
 
-if ( ! function_exists( 'wp_register_composer_script' ) ):
-	/**
-	 * Register a JavaScript file from a Composer library
-	 *
-	 * @param string      $handle    Script handle for registration
-	 * @param string      $file      Relative path to JS file from assets/
-	 * @param array       $deps      Optional. Script dependencies. Default ['jquery'].
-	 * @param string|bool $ver       Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer Optional. Whether to load in footer. Default true.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_register_composer_script(
-		string $handle,
-		string $file,
-		array $deps = [ 'jquery' ],
-		$ver = false,
-		bool $in_footer = true
-	): bool {
-		return AssetLoader::register_script( $handle, $file, $deps, $ver, $in_footer );
-	}
-endif;
-
-if ( ! function_exists( 'wp_register_composer_style' ) ):
-	/**
-	 * Register a CSS file from a Composer library
-	 *
-	 * @param string      $handle Style handle for registration
-	 * @param string      $file   Relative path to CSS file from assets/
-	 * @param array       $deps   Optional. Style dependencies. Default empty array.
-	 * @param string|bool $ver    Optional. Version string or false for auto-detection. Default false.
-	 * @param string      $media  Optional. Media type for which stylesheet applies. Default 'all'.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_register_composer_style(
-		string $handle,
-		string $file,
-		array $deps = [],
-		$ver = false,
-		string $media = 'all'
-	): bool {
-		return AssetLoader::register_style( $handle, $file, $deps, $ver, $media );
-	}
-endif;
-
-if ( ! function_exists( 'wp_register_composer_script_from_file' ) ):
-	/**
-	 * Register a JavaScript file with explicit file reference
-	 *
-	 * @param string      $handle       Script handle for registration
-	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
-	 * @param string      $file         Relative path to JS file from assets/
-	 * @param array       $deps         Optional. Script dependencies. Default ['jquery'].
-	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer    Optional. Whether to load in footer. Default true.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_register_composer_script_from_file(
-		string $handle,
-		string $calling_file,
-		string $file,
-		array $deps = [ 'jquery' ],
-		$ver = false,
-		bool $in_footer = true
-	): bool {
-		return AssetLoader::register_script_from_file( $handle, $calling_file, $file, $deps, $ver, $in_footer );
-	}
-endif;
-
-if ( ! function_exists( 'wp_register_composer_style_from_file' ) ):
-	/**
-	 * Register a CSS file with explicit file reference
-	 *
-	 * @param string      $handle       Style handle for registration
-	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
-	 * @param string      $file         Relative path to CSS file from assets/
-	 * @param array       $deps         Optional. Style dependencies. Default empty array.
-	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param string      $media        Optional. Media type for which stylesheet applies. Default 'all'.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_register_composer_style_from_file(
-		string $handle,
-		string $calling_file,
-		string $file,
-		array $deps = [],
-		$ver = false,
-		string $media = 'all'
-	): bool {
-		return AssetLoader::register_style_from_file( $handle, $calling_file, $file, $deps, $ver, $media );
-	}
-endif;
-
 if ( ! function_exists( 'wp_enqueue_composer_script' ) ):
 	/**
-	 * Enqueue a JavaScript file from a Composer library
+	 * Enqueue a JavaScript file from a Composer package
 	 *
-	 * @param string      $handle    Script handle for registration
-	 * @param string      $file      Relative path to JS file from assets/
-	 * @param array       $deps      Optional. Script dependencies. Default ['jquery'].
-	 * @param string|bool $ver       Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer Optional. Whether to load in footer. Default true.
+	 * Mirrors wp_enqueue_script() but resolves file paths relative to Composer packages.
+	 * Automatically detects the assets directory and handles URL generation.
 	 *
-	 * @return bool True on success, false on failure
+	 * @param string      $handle       Script handle for registration.
+	 * @param string      $calling_file File path to resolve assets relative to. Use __FILE__.
+	 * @param string      $file         Relative path to JS file from assets/ directory.
+	 * @param array       $deps         Optional. Array of script handles this script depends on. Default empty array.
+	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
+	 * @param bool        $in_footer    Optional. Whether to enqueue the script in the footer. Default true.
+	 *
+	 * @return bool True on success, false on failure.
 	 */
 	function wp_enqueue_composer_script(
 		string $handle,
-		string $file,
-		array $deps = [ 'jquery' ],
-		$ver = false,
-		bool $in_footer = true
-	): bool {
-		return AssetLoader::enqueue_script( $handle, $file, $deps, $ver, $in_footer );
-	}
-endif;
-
-if ( ! function_exists( 'wp_enqueue_composer_style' ) ):
-	/**
-	 * Enqueue a CSS file from a Composer library
-	 *
-	 * @param string      $handle Style handle for registration
-	 * @param string      $file   Relative path to CSS file from assets/
-	 * @param array       $deps   Optional. Style dependencies. Default empty array.
-	 * @param string|bool $ver    Optional. Version string or false for auto-detection. Default false.
-	 * @param string      $media  Optional. Media type for which stylesheet applies. Default 'all'.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_enqueue_composer_style(
-		string $handle,
-		string $file,
-		array $deps = [],
-		$ver = false,
-		string $media = 'all'
-	): bool {
-		return AssetLoader::enqueue_style( $handle, $file, $deps, $ver, $media );
-	}
-endif;
-
-if ( ! function_exists( 'wp_enqueue_composer_script_from_file' ) ):
-	/**
-	 * Enqueue a JavaScript file with explicit file reference
-	 *
-	 * @param string      $handle       Script handle for registration
-	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
-	 * @param string      $file         Relative path to JS file from assets/
-	 * @param array       $deps         Optional. Script dependencies. Default ['jquery'].
-	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer    Optional. Whether to load in footer. Default true.
-	 *
-	 * @return bool True on success, false on failure
-	 */
-	function wp_enqueue_composer_script_from_file(
-		string $handle,
 		string $calling_file,
 		string $file,
-		array $deps = [ 'jquery' ],
+		array $deps = [],
 		$ver = false,
 		bool $in_footer = true
 	): bool {
@@ -182,20 +43,23 @@ if ( ! function_exists( 'wp_enqueue_composer_script_from_file' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_enqueue_composer_style_from_file' ) ):
+if ( ! function_exists( 'wp_enqueue_composer_style' ) ):
 	/**
-	 * Enqueue a CSS file with explicit file reference
+	 * Enqueue a CSS file from a Composer package
 	 *
-	 * @param string      $handle       Style handle for registration
-	 * @param string      $calling_file File path to resolve assets relative to (__FILE__)
-	 * @param string      $file         Relative path to CSS file from assets/
-	 * @param array       $deps         Optional. Style dependencies. Default empty array.
+	 * Mirrors wp_enqueue_style() but resolves file paths relative to Composer packages.
+	 * Automatically detects the assets directory and handles URL generation.
+	 *
+	 * @param string      $handle       Style handle for registration.
+	 * @param string      $calling_file File path to resolve assets relative to. Use __FILE__.
+	 * @param string      $file         Relative path to CSS file from assets/ directory.
+	 * @param array       $deps         Optional. Array of style handles this style depends on. Default empty array.
 	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param string      $media        Optional. Media type for which stylesheet applies. Default 'all'.
+	 * @param string      $media        Optional. The media for which this stylesheet has been defined. Default 'all'.
 	 *
-	 * @return bool True on success, false on failure
+	 * @return bool True on success, false on failure.
 	 */
-	function wp_enqueue_composer_style_from_file(
+	function wp_enqueue_composer_style(
 		string $handle,
 		string $calling_file,
 		string $file,
@@ -207,15 +71,60 @@ if ( ! function_exists( 'wp_enqueue_composer_style_from_file' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_get_composer_asset_url' ) ):
+if ( ! function_exists( 'wp_register_composer_script' ) ):
 	/**
-	 * Get the URL for an asset file from a Composer library
+	 * Register a JavaScript file from a Composer package
 	 *
-	 * @param string $file Relative path to an asset file from assets/
+	 * Mirrors wp_register_script() but resolves file paths relative to Composer packages.
+	 * Automatically detects the assets directory and handles URL generation.
+	 * The script can be enqueued later using wp_enqueue_script() with the same handle.
 	 *
-	 * @return string|null Asset URL or null if not found
+	 * @param string      $handle       Script handle for registration.
+	 * @param string      $calling_file File path to resolve assets relative to. Use __FILE__.
+	 * @param string      $file         Relative path to JS file from assets/ directory.
+	 * @param array       $deps         Optional. Array of script handles this script depends on. Default empty array.
+	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
+	 * @param bool        $in_footer    Optional. Whether to enqueue the script in the footer. Default true.
+	 *
+	 * @return bool True on success, false on failure.
 	 */
-	function wp_get_composer_asset_url( string $file ): ?string {
-		return AssetLoader::get_asset_url( $file );
+	function wp_register_composer_script(
+		string $handle,
+		string $calling_file,
+		string $file,
+		array $deps = [],
+		$ver = false,
+		bool $in_footer = true
+	): bool {
+		return AssetLoader::register_script_from_file( $handle, $calling_file, $file, $deps, $ver, $in_footer );
+	}
+endif;
+
+if ( ! function_exists( 'wp_register_composer_style' ) ):
+	/**
+	 * Register a CSS file from a Composer package
+	 *
+	 * Mirrors wp_register_style() but resolves file paths relative to Composer packages.
+	 * Automatically detects the assets directory and handles URL generation.
+	 * The style can be enqueued later using wp_enqueue_style() with the same handle.
+	 *
+	 * @param string      $handle       Style handle for registration.
+	 * @param string      $calling_file File path to resolve assets relative to. Use __FILE__.
+	 * @param string      $file         Relative path to CSS file from assets/ directory.
+	 * @param array       $deps         Optional. Array of style handles this style depends on. Default empty array.
+	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
+	 * @param string      $media        Optional. The media for which this stylesheet has been defined. Default 'all'.
+	 *
+	 * @return bool True on success, false on failure.
+	 */
+	function wp_register_composer_style(
+		string $handle,
+		string $calling_file,
+		string $file,
+		array $deps = [],
+		$ver = false,
+		string $media = 'all'
+	): bool {
+		return AssetLoader::register_style_from_file( $handle, $calling_file, $file, $deps, $ver, $media );
 	}
 endif;
