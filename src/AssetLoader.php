@@ -677,4 +677,62 @@ class AssetLoader {
 		return $asset ? $asset['file_url'] : null;
 	}
 
+	/**
+	 * Get file contents from a Composer package
+	 *
+	 * Generic file loader for any asset type (SVG, JSON, XML, etc).
+	 * Optionally sanitizes SVG files.
+	 *
+	 * @param string $calling_file File path to resolve assets relative to.
+	 * @param string $file         Relative path to file from assets/ directory.
+	 * @param bool   $sanitize_svg Optional. Sanitize if file is SVG. Default false.
+	 *
+	 * @return string|false File content or false on failure.
+	 */
+	public static function get_file_from_file( string $calling_file, string $file, bool $sanitize_svg = false ) {
+		$asset_info = self::resolve_asset_from_file( $calling_file, $file );
+
+		if ( ! $asset_info || ! isset( $asset_info['file_path'] ) ) {
+			return false;
+		}
+
+		$content = file_get_contents( $asset_info['file_path'] );
+
+		if ( $content === false ) {
+			return false;
+		}
+
+		// Auto-sanitize SVG files if requested
+		if ( $sanitize_svg && str_ends_with( strtolower( $file ), '.svg' ) ) {
+			$content = self::sanitize_svg( $content );
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Sanitizes SVG string.
+	 *
+	 * Basic cleanup for trusted SVG files.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $svg SVG string.
+	 *
+	 * @return string Sanitized SVG content.
+	 */
+	private static function sanitize_svg( string $svg ): string {
+		// Basic security sanitization
+		$svg = preg_replace( '/<script\b[^>]*>(.*?)<\/script>/is', '', $svg );
+		$svg = preg_replace( '/\s*on\w+\s*=\s*["\'].*?["\']/i', '', $svg );
+
+		// Cleanup
+		$svg = preg_replace( '/<!--(.|\s)*?-->/', '', $svg );        // Remove comments
+		$svg = preg_replace( '/\s+/', ' ', $svg );                   // Normalize whitespace
+		$svg = preg_replace( '/>\s+</', '><', $svg );                // Remove spaces between tags
+		$svg = str_replace( 'viewbox=', 'viewBox=', $svg );          // Fix casing
+
+		return trim( $svg );
+	}
+
 }

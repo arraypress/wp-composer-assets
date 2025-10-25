@@ -128,3 +128,23 @@ if ( ! function_exists( 'wp_register_composer_style' ) ):
 		return AssetLoader::register_style_from_file( $handle, $calling_file, $file, $deps, $ver, $media );
 	}
 endif;
+
+if ( ! function_exists( 'wp_get_composer_file' ) ):
+	/**
+	 * Get any file contents from a Composer package
+	 *
+	 * Generic file loader for any asset type (JSON, XML, etc).
+	 * Returns raw file contents without processing.
+	 *
+	 * @param string $calling_file File path to resolve assets relative to. Use __FILE__.
+	 * @param string $file         Relative path to file from assets/ directory.
+	 *
+	 * @return string|false File content on success, false on failure.
+	 */
+	function wp_get_composer_file(
+		string $calling_file,
+		string $file
+	) {
+		return AssetLoader::get_file_from_file( $calling_file, $file );
+	}
+endif;
