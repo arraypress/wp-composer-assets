@@ -39,7 +39,7 @@ if ( ! function_exists( 'wp_enqueue_composer_script' ) ):
 		$ver = false,
 		bool $in_footer = true
 	): bool {
-		return AssetLoader::enqueue_script_from_file( $handle, $calling_file, $file, $deps, $ver, $in_footer );
+		return AssetLoader::enqueue_script( $handle, $calling_file, $file, $deps, $ver, $in_footer );
 	}
 endif;
 
@@ -67,7 +67,7 @@ if ( ! function_exists( 'wp_enqueue_composer_style' ) ):
 		$ver = false,
 		string $media = 'all'
 	): bool {
-		return AssetLoader::enqueue_style_from_file( $handle, $calling_file, $file, $deps, $ver, $media );
+		return AssetLoader::enqueue_style( $handle, $calling_file, $file, $deps, $ver, $media );
 	}
 endif;
 
@@ -96,7 +96,7 @@ if ( ! function_exists( 'wp_register_composer_script' ) ):
 		$ver = false,
 		bool $in_footer = true
 	): bool {
-		return AssetLoader::register_script_from_file( $handle, $calling_file, $file, $deps, $ver, $in_footer );
+		return AssetLoader::register_script( $handle, $calling_file, $file, $deps, $ver, $in_footer );
 	}
 endif;
 
@@ -125,7 +125,7 @@ if ( ! function_exists( 'wp_register_composer_style' ) ):
 		$ver = false,
 		string $media = 'all'
 	): bool {
-		return AssetLoader::register_style_from_file( $handle, $calling_file, $file, $deps, $ver, $media );
+		return AssetLoader::register_style( $handle, $calling_file, $file, $deps, $ver, $media );
 	}
 endif;
 
@@ -133,18 +133,20 @@ if ( ! function_exists( 'wp_get_composer_file' ) ):
 	/**
 	 * Get any file contents from a Composer package
 	 *
-	 * Generic file loader for any asset type (JSON, XML, etc).
-	 * Returns raw file contents without processing.
+	 * Generic file loader for any asset type (SVG, JSON, XML, etc).
+	 * Optionally sanitizes SVG files for security.
 	 *
 	 * @param string $calling_file File path to resolve assets relative to. Use __FILE__.
 	 * @param string $file         Relative path to file from assets/ directory.
+	 * @param bool   $sanitize_svg Optional. Sanitize if file is SVG. Default false.
 	 *
 	 * @return string|false File content on success, false on failure.
 	 */
 	function wp_get_composer_file(
 		string $calling_file,
-		string $file
+		string $file,
+		bool $sanitize_svg = false
 	) {
-		return AssetLoader::get_file_from_file( $calling_file, $file );
+		return AssetLoader::get_file( $calling_file, $file, $sanitize_svg );
 	}
 endif;
