@@ -132,7 +132,7 @@ class AssetLoader {
 		}
 
 		foreach ( $mappings as $local_path => $url ) {
-			if ( strpos( $path, $local_path ) === 0 ) {
+			if ( str_starts_with( $path, $local_path ) ) {
 				return str_replace( $local_path, rtrim( $url, '/' ), $path );
 			}
 		}
