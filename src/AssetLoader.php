@@ -730,7 +730,7 @@ class AssetLoader {
 		$svg = preg_replace( '/<!--(.|\s)*?-->/', '', $svg );        // Remove comments
 		$svg = preg_replace( '/\s+/', ' ', $svg );                   // Normalize whitespace
 		$svg = preg_replace( '/>\s+</', '><', $svg );                // Remove spaces between tags
-		$svg = str_replace( 'viewbox=', 'viewBox=', $svg );          // Fix casing
+		$svg = str_replace( 'viewbox=', 'viewBox=', $svg );              // Fix casing
 
 		return trim( $svg );
 	}
