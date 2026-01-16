@@ -13,7 +13,7 @@
 
 declare( strict_types=1 );
 
-use ArrayPress\WP\ComposerAssets\AssetLoader;
+use ArrayPress\ComposerAssets\AssetLoader;
 
 if ( ! function_exists( 'wp_enqueue_composer_script' ) ):
 	/**
@@ -133,7 +133,7 @@ if ( ! function_exists( 'wp_get_composer_file' ) ):
 	/**
 	 * Get any file contents from a Composer package
 	 *
-	 * Generic file loader for any asset type (SVG, JSON, XML, etc).
+	 * Generic file loader for any asset type (SVG, JSON, XML, etc.).
 	 * Optionally sanitizes SVG files for security.
 	 *
 	 * @param string $calling_file File path to resolve assets relative to. Use __FILE__.

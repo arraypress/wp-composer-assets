@@ -16,7 +16,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ArrayPress\\WP\\ComposerAssets\\": "src/"
+      "ArrayPress\\ComposerAssets\\": "src/"
     },
     "files": [
       "src/Functions.php"

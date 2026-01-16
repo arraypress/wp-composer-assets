@@ -13,7 +13,7 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\WP\ComposerAssets;
+namespace ArrayPress\ComposerAssets;
 
 class AssetLoader {
 
