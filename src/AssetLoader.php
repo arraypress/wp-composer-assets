@@ -18,30 +18,27 @@ namespace ArrayPress\ComposerAssets;
 class AssetLoader {
 
 	/**
-	 * Common directory patterns for asset location detection
+	 * How far up to look for a package root before giving up.
 	 *
-	 * @var array<string>
+	 * A Composer package is never this deeply nested; the limit exists only so
+	 * a pathological path cannot walk to the filesystem root.
 	 */
-	private static array $asset_patterns = [
-		'/assets',                // Same level as the calling file
-		'/../assets',             // Parent directory
-		'/../../assets',          // Grandparent (for src/ structures)
-		'/../../../assets',       // Great-grandparent (deep src/ structures)
-		'/../../../../assets',    // Great-great-grandparent (very deep nesting)
-		'/../../../../../assets', // Great-great-great-grandparent (extremely deep nesting)
-	];
+	private const MAX_DEPTH = 12;
 
 	/**
-	 * Cached asset paths for performance
+	 * Cached asset paths, keyed by calling file.
 	 *
-	 * @var array<string, string>
+	 * A null value is a cached miss: the package has no assets directory, and
+	 * there is no point walking the filesystem again to rediscover that.
+	 *
+	 * @var array<string, string|null>
 	 */
 	private static array $path_cache = [];
 
 	/**
-	 * Cached asset URLs for performance
+	 * Cached asset URLs, keyed by calling file.
 	 *
-	 * @var array<string, string>
+	 * @var array<string, string|null>
 	 */
 	private static array $url_cache = [];
 
@@ -277,32 +274,93 @@ class AssetLoader {
 	public static function locate_assets( string $calling_file ): ?array {
 		$cache_key = $calling_file;
 
-		if ( isset( self::$path_cache[ $cache_key ] ) ) {
-			return [
-				'path' => self::$path_cache[ $cache_key ],
-				'url'  => self::$url_cache[ $cache_key ]
-			];
+		if ( array_key_exists( $cache_key, self::$path_cache ) ) {
+			return null === self::$path_cache[ $cache_key ]
+				? null
+				: [
+					'path' => self::$path_cache[ $cache_key ],
+					'url'  => self::$url_cache[ $cache_key ],
+				];
 		}
 
-		$file_dir = dirname( $calling_file );
+		$result = self::resolve_assets_dir( $calling_file );
 
-		// Try each pattern until we find a valid assets directory
-		foreach ( self::$asset_patterns as $pattern ) {
-			$assets_path   = $file_dir . $pattern;
-			$resolved_path = realpath( $assets_path );
+		// Cache misses too. Without this, a package that legitimately has no
+		// assets directory repeats the filesystem walk on every call.
+		self::$path_cache[ $cache_key ] = $result['path'] ?? null;
+		self::$url_cache[ $cache_key ]  = $result['url'] ?? null;
 
-			if ( $resolved_path && is_dir( $resolved_path ) ) {
-				$url = self::path_to_url( $resolved_path );
-				if ( $url ) {
-					self::$path_cache[ $cache_key ] = $resolved_path;
-					self::$url_cache[ $cache_key ]  = $url;
+		return $result;
+	}
 
-					return [
-						'path' => $resolved_path,
-						'url'  => $url
-					];
-				}
+	/**
+	 * Locate the assets directory belonging to the calling file's package
+	 *
+	 * @param string $calling_file The file making the call
+	 *
+	 * @return array|null Array with 'path' and 'url' keys, or null if not found
+	 */
+	private static function resolve_assets_dir( string $calling_file ): ?array {
+		$root = self::locate_package_root( $calling_file );
+
+		if ( null === $root ) {
+			return null;
+		}
+
+		$assets_path = $root . '/assets';
+
+		if ( ! is_dir( $assets_path ) ) {
+			return null;
+		}
+
+		$url = self::path_to_url( $assets_path );
+
+		if ( null === $url ) {
+			return null;
+		}
+
+		return [
+			'path' => $assets_path,
+			'url'  => $url,
+		];
+	}
+
+	/**
+	 * Find the root of the Composer package containing a file
+	 *
+	 * Walks up until it finds a composer.json, which by definition sits at a
+	 * package's root — including in a Strauss-prefixed build, which copies it
+	 * alongside the rewritten source.
+	 *
+	 * This replaces an earlier approach that tried a fixed list of relative
+	 * paths ('/assets', '/../assets', '/../../assets', ...) and took the first
+	 * directory named "assets" it found. That could walk straight out of the
+	 * package: a package laid out as <package>/src/File.php with no assets
+	 * directory of its own would climb past vendor/ and match the *host
+	 * plugin's* assets directory, then serve every URL from there and cache the
+	 * result. Whether it misfired depended entirely on what happened to exist
+	 * in the surrounding tree.
+	 *
+	 * @param string $calling_file The file making the call
+	 *
+	 * @return string|null Absolute package root, or null if none was found
+	 */
+	private static function locate_package_root( string $calling_file ): ?string {
+		$dir = dirname( $calling_file );
+
+		for ( $depth = 0; $depth < self::MAX_DEPTH; $depth++ ) {
+			if ( is_file( $dir . '/composer.json' ) ) {
+				return $dir;
 			}
+
+			$parent = dirname( $dir );
+
+			// dirname() is its own fixed point at the filesystem root.
+			if ( $parent === $dir ) {
+				break;
+			}
+
+			$dir = $parent;
 		}
 
 		return null;
