@@ -136,21 +136,15 @@ if ( ! function_exists( 'arraypress_get_composer_file' ) ):
 	/**
 	 * Get any file's contents from a Composer package
 	 *
-	 * Generic loader for any asset type (SVG, JSON, XML, ...). Optionally
-	 * sanitizes SVG files.
+	 * Generic loader for any asset type (SVG, JSON, XML, ...).
 	 *
 	 * @param string $calling_file File path to resolve assets relative to. Use __FILE__.
 	 * @param string $file         Relative path to file from assets/ directory.
-	 * @param bool   $sanitize_svg Optional. Sanitize if the file is an SVG. Default false.
 	 *
 	 * @return string|false File content on success, false on failure.
 	 */
-	function arraypress_get_composer_file(
-		string $calling_file,
-		string $file,
-		bool $sanitize_svg = false
-	) {
-		return AssetLoader::get_file( $calling_file, $file, $sanitize_svg );
+	function arraypress_get_composer_file( string $calling_file, string $file ) {
+		return AssetLoader::get_file( $calling_file, $file );
 	}
 endif;
 
@@ -275,11 +269,10 @@ if ( ! function_exists( 'wp_get_composer_file' ) ):
 	 *
 	 * @param string $calling_file Calling file. Use __FILE__.
 	 * @param string $file         Relative path from assets/.
-	 * @param bool   $sanitize_svg Sanitize SVG contents.
 	 *
 	 * @return string|false
 	 */
-	function wp_get_composer_file( string $calling_file, string $file, bool $sanitize_svg = false ) {
-		return arraypress_get_composer_file( $calling_file, $file, $sanitize_svg );
+	function wp_get_composer_file( string $calling_file, string $file ) {
+		return arraypress_get_composer_file( $calling_file, $file );
 	}
 endif;

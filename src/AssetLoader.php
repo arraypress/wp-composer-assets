@@ -209,33 +209,27 @@ class AssetLoader {
 	 * Get file contents from a Composer package
 	 *
 	 * Generic file loader for any asset type (SVG, JSON, XML, etc).
-	 * Optionally sanitizes SVG files.
+	 *
+	 * Files come from inside a Composer package — shipped by the developer,
+	 * not supplied by a user — so the contents are as trusted as the rest of
+	 * the package's code. There is deliberately no sanitisation step here: see
+	 * the note on the removal of $sanitize_svg in the 2.2.0 changelog. For
+	 * untrusted SVG, use a real DOM-based sanitiser such as
+	 * enshrined/svg-sanitize rather than anything regex-based.
 	 *
 	 * @param string $calling_file File path to resolve assets relative to
 	 * @param string $file         Relative path to file from assets/ directory
-	 * @param bool   $sanitize_svg Optional. Sanitize if file is SVG. Default false.
 	 *
 	 * @return string|false File content or false on failure
 	 */
-	public static function get_file( string $calling_file, string $file, bool $sanitize_svg = false ) {
+	public static function get_file( string $calling_file, string $file ) {
 		$asset = self::resolve_asset( $calling_file, $file );
 
 		if ( ! $asset || ! isset( $asset['file_path'] ) ) {
 			return false;
 		}
 
-		$content = file_get_contents( $asset['file_path'] );
-
-		if ( $content === false ) {
-			return false;
-		}
-
-		// Auto-sanitize SVG files if requested
-		if ( $sanitize_svg && str_ends_with( strtolower( $file ), '.svg' ) ) {
-			$content = self::sanitize_svg( $content );
-		}
-
-		return $content;
+		return file_get_contents( $asset['file_path'] );
 	}
 
 	/**
@@ -422,28 +416,6 @@ class AssetLoader {
 		return '1.0.0';
 	}
 
-	/**
-	 * Sanitize SVG string
-	 *
-	 * Basic cleanup for trusted SVG files.
-	 *
-	 * @param string $svg SVG string
-	 *
-	 * @return string Sanitized SVG content
-	 */
-	private static function sanitize_svg( string $svg ): string {
-		// Basic security sanitization
-		$svg = preg_replace( '/<script\b[^>]*>(.*?)<\/script>/is', '', $svg );
-		$svg = preg_replace( '/\s*on\w+\s*=\s*["\'].*?["\']/i', '', $svg );
-
-		// Cleanup
-		$svg = preg_replace( '/<!--(.|\s)*?-->/', '', $svg );        // Remove comments
-		$svg = preg_replace( '/\s+/', ' ', $svg );                   // Normalize whitespace
-		$svg = preg_replace( '/>\s+</', '><', $svg );                // Remove spaces between tags
-		$svg = str_replace( 'viewbox=', 'viewBox=', $svg );              // Fix casing
-
-		return trim( $svg );
-	}
 
 	/**
 	 * Clear all caches
