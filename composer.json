@@ -1,6 +1,5 @@
 {
   "name": "arraypress/wp-composer-assets",
-  "version": "2.2.0",
   "description": "Simple WordPress asset loading for Composer libraries with zero configuration",
   "type": "library",
   "license": "GPL-2.0-or-later",
