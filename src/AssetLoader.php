@@ -53,7 +53,10 @@ class AssetLoader {
 	 * @param string      $file         Relative path to JS file from assets/
 	 * @param array       $deps         Optional. Script dependencies. Default empty array.
 	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer    Optional. Whether to load in footer. Default true.
+	 * @param array|bool  $args         Optional. Either a bool for $in_footer, or an array
+	 *                                  accepting 'in_footer' (bool) and 'strategy'
+	 *                                  ('defer'|'async'), matching wp_enqueue_script()
+	 *                                  since WordPress 6.3. Default true.
 	 *
 	 * @return bool True on success, false on failure
 	 */
@@ -63,9 +66,9 @@ class AssetLoader {
 		string $file,
 		array $deps = [],
 		$ver = false,
-		bool $in_footer = true
+		$args = true
 	): bool {
-		if ( ! self::register_script( $handle, $calling_file, $file, $deps, $ver, $in_footer ) ) {
+		if ( ! self::register_script( $handle, $calling_file, $file, $deps, $ver, $args ) ) {
 			return false;
 		}
 
@@ -111,7 +114,10 @@ class AssetLoader {
 	 * @param string      $file         Relative path to JS file from assets/
 	 * @param array       $deps         Optional. Script dependencies. Default empty array.
 	 * @param string|bool $ver          Optional. Version string or false for auto-detection. Default false.
-	 * @param bool        $in_footer    Optional. Whether to load in footer. Default true.
+	 * @param array|bool  $args         Optional. Either a bool for $in_footer, or an array
+	 *                                  accepting 'in_footer' (bool) and 'strategy'
+	 *                                  ('defer'|'async'), matching wp_register_script()
+	 *                                  since WordPress 6.3. Default true.
 	 *
 	 * @return bool True on success, false on failure
 	 */
@@ -121,7 +127,7 @@ class AssetLoader {
 		string $file,
 		array $deps = [],
 		$ver = false,
-		bool $in_footer = true
+		$args = true
 	): bool {
 		$asset = self::resolve_asset( $calling_file, $file );
 		if ( ! $asset ) {
@@ -130,9 +136,44 @@ class AssetLoader {
 
 		$version = ( $ver === false ) ? self::get_version( $asset['file_path'] ) : $ver;
 
-		wp_register_script( $handle, $asset['file_url'], $deps, $version, $in_footer );
+		wp_register_script( $handle, $asset['file_url'], $deps, $version, self::normalize_script_args( $args ) );
 
 		return true;
+	}
+
+	/**
+	 * Normalise the script $args parameter
+	 *
+	 * WordPress 6.3 replaced wp_register_script()'s boolean $in_footer with an
+	 * $args array that also carries a loading 'strategy' ('defer' or 'async').
+	 * Passing a bool still works there, but a caller cannot request deferred
+	 * loading through a boolean — so accept both shapes and hand WordPress the
+	 * array form.
+	 *
+	 * An unrecognised strategy is dropped rather than forwarded: WordPress
+	 * emits a _doing_it_wrong() notice for invalid values, and a typo in a
+	 * caller is not worth a warning on every page load.
+	 *
+	 * @param array|bool $args Raw argument.
+	 *
+	 * @return array Normalised args array for WordPress.
+	 */
+	private static function normalize_script_args( $args ): array {
+		if ( is_bool( $args ) ) {
+			return [ 'in_footer' => $args ];
+		}
+
+		if ( ! is_array( $args ) ) {
+			return [ 'in_footer' => true ];
+		}
+
+		$normalized = [ 'in_footer' => (bool) ( $args['in_footer'] ?? true ) ];
+
+		if ( isset( $args['strategy'] ) && in_array( $args['strategy'], [ 'defer', 'async' ], true ) ) {
+			$normalized['strategy'] = $args['strategy'];
+		}
+
+		return $normalized;
 	}
 
 	/**
