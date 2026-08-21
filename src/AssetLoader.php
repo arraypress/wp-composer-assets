@@ -371,7 +371,7 @@ class AssetLoader {
 	private static function build_file_paths( array $assets, string $file ): array {
 		return [
 			'file_path' => $assets['path'] . '/' . ltrim( $file, '/' ),
-			'file_url'  => $assets['url'] . '/' . ltrim( $file, '/' )
+			'file_url'  => $assets['url'] . '/' . ltrim( $file, '/' ),
 		];
 	}
 
@@ -426,5 +426,4 @@ class AssetLoader {
 		self::$path_cache = [];
 		self::$url_cache  = [];
 	}
-
 }

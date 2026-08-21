@@ -22,7 +22,7 @@ declare( strict_types=1 );
 
 use ArrayPress\ComposerAssets\AssetLoader;
 
-if ( ! function_exists( 'arraypress_enqueue_composer_script' ) ):
+if ( ! function_exists( 'arraypress_enqueue_composer_script' ) ) :
 	/**
 	 * Enqueue a JavaScript file from a Composer package
 	 *
@@ -52,7 +52,7 @@ if ( ! function_exists( 'arraypress_enqueue_composer_script' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'arraypress_enqueue_composer_style' ) ):
+if ( ! function_exists( 'arraypress_enqueue_composer_style' ) ) :
 	/**
 	 * Enqueue a CSS file from a Composer package
 	 *
@@ -77,7 +77,7 @@ if ( ! function_exists( 'arraypress_enqueue_composer_style' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'arraypress_register_composer_script' ) ):
+if ( ! function_exists( 'arraypress_register_composer_script' ) ) :
 	/**
 	 * Register a JavaScript file from a Composer package
 	 *
@@ -105,7 +105,7 @@ if ( ! function_exists( 'arraypress_register_composer_script' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'arraypress_register_composer_style' ) ):
+if ( ! function_exists( 'arraypress_register_composer_style' ) ) :
 	/**
 	 * Register a CSS file from a Composer package
 	 *
@@ -132,7 +132,7 @@ if ( ! function_exists( 'arraypress_register_composer_style' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'arraypress_get_composer_file' ) ):
+if ( ! function_exists( 'arraypress_get_composer_file' ) ) :
 	/**
 	 * Get any file's contents from a Composer package
 	 *
@@ -163,7 +163,7 @@ endif;
  * exist to avoid.
  */
 
-if ( ! function_exists( 'wp_enqueue_composer_script' ) ):
+if ( ! function_exists( 'wp_enqueue_composer_script' ) ) :
 	/**
 	 * @deprecated 2.1.0 Use arraypress_enqueue_composer_script().
 	 *
@@ -188,7 +188,7 @@ if ( ! function_exists( 'wp_enqueue_composer_script' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_enqueue_composer_style' ) ):
+if ( ! function_exists( 'wp_enqueue_composer_style' ) ) :
 	/**
 	 * @deprecated 2.1.0 Use arraypress_enqueue_composer_style().
 	 *
@@ -213,7 +213,7 @@ if ( ! function_exists( 'wp_enqueue_composer_style' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_register_composer_script' ) ):
+if ( ! function_exists( 'wp_register_composer_script' ) ) :
 	/**
 	 * @deprecated 2.1.0 Use arraypress_register_composer_script().
 	 *
@@ -238,7 +238,7 @@ if ( ! function_exists( 'wp_register_composer_script' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_register_composer_style' ) ):
+if ( ! function_exists( 'wp_register_composer_style' ) ) :
 	/**
 	 * @deprecated 2.1.0 Use arraypress_register_composer_style().
 	 *
@@ -263,7 +263,7 @@ if ( ! function_exists( 'wp_register_composer_style' ) ):
 	}
 endif;
 
-if ( ! function_exists( 'wp_get_composer_file' ) ):
+if ( ! function_exists( 'wp_get_composer_file' ) ) :
 	/**
 	 * @deprecated 2.1.0 Use arraypress_get_composer_file().
 	 *
