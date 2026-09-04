@@ -241,6 +241,15 @@ class AssetLoader {
 	 * @return array|null Complete asset information or null if not found
 	 */
 	public static function resolve_asset( string $calling_file, string $file ): ?array {
+		// The relative path is meant to come from the developer, but a
+		// plugin that builds it from a setting -- an icon name, say -- has
+		// handed this to the user, and "../../wp-config.php" reads as an
+		// asset path to everything below. Nothing legitimate needs to leave
+		// the assets directory.
+		if ( ! self::stays_within_assets( $file ) ) {
+			return null;
+		}
+
 		$assets = self::locate_assets( $calling_file );
 		if ( ! $assets ) {
 			return null;
@@ -376,29 +385,83 @@ class AssetLoader {
 	}
 
 	/**
+	 * Whether a relative asset path stays inside the assets directory.
+	 *
+	 * @param string $file Relative path from the assets directory.
+	 *
+	 * @return bool
+	 */
+	private static function stays_within_assets( string $file ): bool {
+		if ( str_contains( $file, "\0" ) ) {
+			return false;
+		}
+
+		return ! in_array( '..', explode( '/', wp_normalize_path( $file ) ), true );
+	}
+
+	/**
 	 * Convert filesystem path to URL
+	 *
+	 * Tries the content directory, then the WordPress root. A path under
+	 * neither is usually a symlinked plugin: __FILE__ resolves symlinks, so
+	 * the real path can sit anywhere on disk. Core keeps a map from each
+	 * plugin's path under wp-content to its real path for exactly this --
+	 * plugins_url() reads it -- and it is read here too.
 	 *
 	 * @param string $path Absolute filesystem path
 	 *
 	 * @return string|null URL or null if conversion fails
 	 */
 	private static function path_to_url( string $path ): ?string {
-		$path        = wp_normalize_path( $path );
-		$content_dir = wp_normalize_path( WP_CONTENT_DIR );
-		$content_url = content_url();
+		$path = wp_normalize_path( $path );
 
-		// Check if path is within content directory
-		if ( str_starts_with( $path, $content_dir ) ) {
-			return str_replace( $content_dir, $content_url, $path );
+		$url = self::url_within( $path, wp_normalize_path( WP_CONTENT_DIR ), content_url() )
+			?? self::url_within( $path, wp_normalize_path( ABSPATH ), site_url( '/' ) );
+
+		if ( null !== $url ) {
+			return $url;
 		}
 
-		// Check if path is within ABSPATH
-		$abspath = wp_normalize_path( ABSPATH );
-		if ( str_starts_with( $path, $abspath ) ) {
-			return str_replace( $abspath, site_url( '/' ), $path );
+		foreach ( (array) ( $GLOBALS['wp_plugin_paths'] ?? [] ) as $plugin_path => $real_path ) {
+			$real_path = rtrim( wp_normalize_path( (string) $real_path ), '/' );
+
+			if ( '' === $real_path || ! str_starts_with( $path, $real_path . '/' ) ) {
+				continue;
+			}
+
+			$mapped = rtrim( wp_normalize_path( (string) $plugin_path ), '/' ) . substr( $path, strlen( $real_path ) );
+
+			// The map only ever holds paths that differ, but a path that maps
+			// to itself would recurse forever, so it is checked anyway.
+			if ( $mapped !== $path ) {
+				return self::path_to_url( $mapped );
+			}
 		}
 
 		return null;
+	}
+
+	/**
+	 * The URL of a path, if it sits under a base directory with a known URL.
+	 *
+	 * A prefix replacement, not str_replace(): that replaces every
+	 * occurrence, so a base directory whose name recurs further down the
+	 * path was rewritten twice.
+	 *
+	 * @param string $path     Normalised absolute path.
+	 * @param string $base     Normalised base directory.
+	 * @param string $base_url The base directory's URL.
+	 *
+	 * @return string|null
+	 */
+	private static function url_within( string $path, string $base, string $base_url ): ?string {
+		$base = rtrim( $base, '/' );
+
+		if ( '' === $base || ! str_starts_with( $path, $base . '/' ) ) {
+			return null;
+		}
+
+		return rtrim( $base_url, '/' ) . substr( $path, strlen( $base ) );
 	}
 
 	/**

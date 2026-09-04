@@ -35,7 +35,7 @@ From inside a library that ships `assets/js/field-kit.js`:
 
 ```php
 add_action( 'admin_enqueue_scripts', function () {
-	wp_enqueue_composer_script(
+	arraypress_enqueue_composer_script(
 		'field-kit',
 		__FILE__,
 		'js/field-kit.js',

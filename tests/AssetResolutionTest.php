@@ -54,6 +54,28 @@ final class AssetResolutionTest extends TestCase {
 		AssetLoader::clear_cache();
 	}
 
+	protected function tearDown(): void {
+		unset( $GLOBALS['wp_plugin_paths'] );
+	}
+
+	/**
+	 * A package that lives outside WordPress altogether, the way a symlinked
+	 * plugin's real path does.
+	 */
+	private static function elsewhere(): string {
+		$root = sys_get_temp_dir() . '/wp-composer-assets-tests/elsewhere/real-plugin';
+
+		if ( ! is_dir( $root . '/assets/css' ) ) {
+			mkdir( $root . '/assets/css', 0777, true );
+		}
+
+		file_put_contents( $root . '/composer.json', '{"name":"acme/real-plugin"}' );
+		file_put_contents( $root . '/assets/css/real.css', 'body{}' );
+		file_put_contents( $root . '/real-plugin.php', '<?php' );
+
+		return $root;
+	}
+
 	public function test_resolves_a_packages_own_assets_directory(): void {
 		$assets = AssetLoader::locate_assets( self::$root . '/vendor/acme/with-assets/src/Deep/Nested.php' );
 
@@ -134,5 +156,79 @@ final class AssetResolutionTest extends TestCase {
 		$second = AssetLoader::locate_assets( $file );
 
 		$this->assertSame( $first, $second );
+	}
+	/**
+	 * A relative path that climbs out of the assets directory is refused.
+	 *
+	 * composer.json sits one level up and does exist, so a null here is the
+	 * guard and not a missing file.
+	 */
+	public function test_a_path_that_escapes_the_assets_directory_is_refused(): void {
+		$file = self::$root . '/vendor/acme/with-assets/src/Deep/Nested.php';
+
+		$this->assertNull( AssetLoader::resolve_asset( $file, '../composer.json' ) );
+		$this->assertNull( AssetLoader::resolve_asset( $file, 'js/../../composer.json' ) );
+		$this->assertNull( AssetLoader::resolve_asset( $file, "js/thing.js\0" ) );
+		$this->assertFalse( AssetLoader::get_file( $file, '..\\composer.json' ) );
+
+		// And an ordinary nested path is still fine.
+		$this->assertNotNull( AssetLoader::resolve_asset( $file, '/js/thing.js' ) );
+	}
+
+	/**
+	 * A package outside WordPress has no URL, and says so.
+	 */
+	public function test_a_path_outside_wordpress_has_no_url(): void {
+		$this->assertNull( AssetLoader::locate_assets( self::elsewhere() . '/real-plugin.php' ) );
+	}
+
+	/**
+	 * A symlinked plugin resolves through core's real-path map.
+	 *
+	 * __FILE__ resolves symlinks, so a plugin symlinked into wp-content
+	 * reports a real path that is nowhere under WordPress, and every asset
+	 * silently failed to register. Core keeps a map from the path under
+	 * wp-content to the real one -- it is how plugins_url() copes -- and
+	 * the same map answers here.
+	 */
+	public function test_a_symlinked_plugin_resolves_through_the_realpath_map(): void {
+		$real = self::elsewhere();
+
+		$GLOBALS['wp_plugin_paths'] = [ WP_CONTENT_DIR . '/plugins/linked-plugin' => $real ];
+
+		$assets = AssetLoader::locate_assets( $real . '/real-plugin.php' );
+
+		$this->assertNotNull( $assets );
+		$this->assertSame( $real . '/assets', $assets['path'], 'The path is still the real one; only the URL is mapped.' );
+		$this->assertSame( 'https://example.test/wp-content/plugins/linked-plugin/assets', $assets['url'] );
+
+		$asset = AssetLoader::resolve_asset( $real . '/real-plugin.php', 'css/real.css' );
+
+		$this->assertSame( 'https://example.test/wp-content/plugins/linked-plugin/assets/css/real.css', $asset['file_url'] );
+	}
+
+	/**
+	 * The content directory is replaced once, as a prefix.
+	 *
+	 * str_replace() rewrote every occurrence, so a path in which the content
+	 * directory's name recurred was rewritten twice.
+	 */
+	public function test_the_url_is_built_from_the_prefix_only(): void {
+		$twice = self::$root . '/vendor/acme/twice' . WP_CONTENT_DIR;
+
+		if ( ! is_dir( $twice . '/assets' ) ) {
+			mkdir( $twice . '/assets', 0777, true );
+		}
+
+		file_put_contents( $twice . '/composer.json', '{"name":"acme/twice"}' );
+		file_put_contents( $twice . '/file.php', '<?php' );
+
+		$assets = AssetLoader::locate_assets( $twice . '/file.php' );
+
+		$this->assertNotNull( $assets );
+		$this->assertSame(
+			'https://example.test/wp-content/plugins/host-plugin/vendor/acme/twice' . WP_CONTENT_DIR . '/assets',
+			$assets['url']
+		);
 	}
 }
